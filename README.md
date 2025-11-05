@@ -213,7 +213,8 @@ Feel free to fork, modify, and use it as a starting point for your own KMP + SQL
 
 ### 💬 Author
 
-**Developed by [Moslem Khanbeiki] ([@yourGitHubHandle]([https://github.com/yourGitHubHandle](https://github.com/skhanbeiki/Litearn)))**
+Developed by \[Moslem Khanbeiki]
+GitHub: [KHANBEIKI](https://github.com/skhanbeiki/)
 If you found this helpful, please ⭐ star the repo to support future updates!
 
 ---
