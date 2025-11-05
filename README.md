@@ -1,23 +1,221 @@
-This is a Kotlin Multiplatform project targeting Android, iOS, Web, Desktop (JVM).
+# Kotlin Multiplatform SQLDelight Sample
 
-* [/composeApp](./composeApp/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./composeApp/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./composeApp/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./composeApp/src/jvmMain/kotlin)
-    folder is the appropriate location.
+A **Kotlin Multiplatform (KMP)** sample project demonstrating how to use **SQLDelight** with **Jetpack Compose**, **Koin** (Dependency Injection), and **MVVM architecture** to build a fully functional, cross-platform CRUD application.
 
-* [/iosApp](./iosApp/iosApp) contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+This example project supports **Android**, **Desktop (JVM)**, **iOS**, and **Web (Wasm)** targets — all sharing the same data layer and business logic.
 
+---
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html),
-[Compose Multiplatform](https://github.com/JetBrains/compose-multiplatform/#compose-multiplatform),
-[Kotlin/Wasm](https://kotl.in/wasm/)…
+## 🚀 Tech Stack
 
-We would appreciate your feedback on Compose/Web and Kotlin/Wasm in the public Slack channel [#compose-web](https://slack-chats.kotlinlang.org/c/compose-web).
-If you face any issues, please report them on [YouTrack](https://youtrack.jetbrains.com/newIssue?project=CMP).
+| Layer                    | Technology                                                                          | Description                                       |
+| ------------------------ | ----------------------------------------------------------------------------------- | ------------------------------------------------- |
+| **Language**             | [Kotlin Multiplatform](https://kotlinlang.org/docs/multiplatform.html)              | Shared code across Android, iOS, Desktop, and Web |
+| **UI Framework**         | [Jetpack Compose Multiplatform](https://github.com/JetBrains/compose-multiplatform) | Modern declarative UI for all platforms           |
+| **Database**             | [SQLDelight](https://cashapp.github.io/sqldelight/)                                 | Type-safe SQL database access                     |
+| **Architecture**         | MVVM (Model–View–ViewModel)                                                         | Clean separation of UI and logic                  |
+| **Dependency Injection** | [Koin](https://insert-koin.io/)                                                     | Lightweight DI framework for Kotlin               |
+| **Navigation**           | [Voyager](https://github.com/adrielcafe/voyager)                                    | Simple multiplatform navigation                   |
+| **Serialization**        | [Kotlinx Serialization](https://github.com/Kotlin/kotlinx.serialization)            | JSON serialization                                |
+| **Build System**         | Gradle (Kotlin DSL)                                                                 | Multiplatform build configuration                 |
 
-You can open the web application by running the `:composeApp:wasmJsBrowserDevelopmentRun` Gradle task.
+---
+
+## 📦 Database Schema (SQLDelight)
+
+```sql
+CREATE TABLE User (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL
+);
+
+insertUser:
+INSERT INTO User(name, email)
+VALUES (?, ?);
+
+getAllUsers:
+SELECT * FROM User;
+
+selectUserById:
+SELECT * FROM User
+WHERE id = ?;
+
+deleteUserById:
+DELETE FROM User WHERE id = ?;
+```
+
+Each SQL query is automatically compiled into type-safe Kotlin interfaces by SQLDelight.
+
+---
+
+## 🧩 Project Structure
+
+```
+composeApp/
+ ├── commonMain/
+ │   ├── data/
+ │   │   ├── Database schema (User.sq)
+ │   │   └── Repository layer
+ │   ├── di/
+ │   │   └── Koin modules
+ │   ├── ui/
+ │   │   ├── MainScreen.kt
+ │   │   └── components/
+ │   └── viewmodel/
+ │       └── MainViewModel.kt
+ ├── androidMain/
+ ├── iosMain/
+ ├── jvmMain/
+ └── wasmJsMain/
+```
+
+---
+
+## ⚙️ Build Configuration
+
+This project uses a single shared Gradle configuration for all targets:
+
+* **Android** (minSdk = 24, targetSdk = 36)
+* **Desktop (JVM 17)**
+* **iOS (Arm64, x64, SimulatorArm64)**
+* **Wasm (WebAssembly JS)**
+
+SQLDelight generates a `Database` class in package:
+
+```
+ir.khanbeiki.sqldelight.sample.data
+```
+
+---
+
+## 💡 Features
+
+* Add new users to the database
+* View all users (auto-updating list)
+* Delete specific users
+* Shared data logic across all platforms
+* Fully reactive Compose UI using `Flow` and `collectAsState()`
+* Dependency injection via Koin
+* Navigation handled by Voyager
+
+---
+
+## 🧱 Architecture Overview
+
+```
+UI (Jetpack Compose)
+        ↓
+ViewModel (MVVM + Koin)
+        ↓
+Repository (SQLDelight)
+        ↓
+Database (User.sq)
+```
+
+The data layer uses **SQLDelight** to provide a type-safe database API, while the `ViewModel` exposes `StateFlow<List<User>>` to the UI.
+
+---
+
+## 🔧 How to Run
+
+### 🟩 Android
+
+```bash
+./gradlew :composeApp:installDebug
+```
+
+### 💻 Desktop
+
+```bash
+./gradlew :composeApp:run
+```
+
+### 🍏 iOS
+
+Open the iOS project in Xcode (generated by KMP plugin) and run on simulator.
+
+### 🌐 Web (Wasm)
+
+```bash
+./gradlew :composeApp:wasmJsBrowserDevelopmentRun
+```
+
+Then open the provided local URL in your browser.
+
+---
+
+## 🧠 Example Code Snippet
+
+```kotlin
+@Composable
+fun MainScreenContent(viewModel: MainViewModel) {
+    val users by viewModel.getAllUsers.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.getAllUsers()
+    }
+
+    Scaffold {
+        Column(Modifier.fillMaxSize()) {
+            Button(onClick = {
+                viewModel.insertUser(
+                    name = "John Doe " + Random.nextInt(),
+                    email = "john@example.com"
+                )
+            }) {
+                Text("Add User")
+            }
+
+            users?.let { list ->
+                LazyColumn {
+                    items(list, key = { it.id }) { user ->
+                        Row(
+                            Modifier.fillMaxWidth().height(48.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(user.name)
+                            Text(
+                                text = "Delete",
+                                color = Color.Red,
+                                modifier = Modifier.clickable {
+                                    viewModel.deleteUser(user.id)
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+---
+
+## 🧰 Dependencies Highlight
+
+* `org.jetbrains.compose` — Compose Multiplatform
+* `com.squareup.sqldelight` — SQLDelight core
+* `io.insert-koin:koin-core` — Dependency Injection
+* `cafe.adriel.voyager` — Navigation framework
+* `androidx.lifecycle` — ViewModel and runtime Compose integration
+
+---
+
+## 📄 License
+
+This sample project is open source under the **MIT License**.
+Feel free to fork, modify, and use it as a starting point for your own KMP + SQLDelight projects.
+
+---
+
+### 💬 Author
+
+**Developed by [Moslem Khanbeiki] ([@yourGitHubHandle]([https://github.com/yourGitHubHandle](https://github.com/skhanbeiki/Litearn)))**
+If you found this helpful, please ⭐ star the repo to support future updates!
+
+---
+
+> Keywords: Kotlin Multiplatform, Compose Multiplatform, SQLDelight, MVVM, Koin, Voyager, Kotlin sample project, cross-platform CRUD app, Jetpack Compose database example, KMP tutorial, Kotlin full-stack example
