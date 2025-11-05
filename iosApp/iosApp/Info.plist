@@ -4,5 +4,8 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+
+	<key>NSMotionUsageDescription</key>
+    <string>We use motion data to count your steps.</string>
 </dict>
 </plist>

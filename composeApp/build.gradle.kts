@@ -11,6 +11,7 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
     alias(libs.plugins.kotlinxSerialization)
+    alias(libs.plugins.kotlin.sqldelight)
 }
 
 kotlin {
@@ -59,15 +60,21 @@ kotlin {
         }
         binaries.executable()
     }
-
+    sqldelight {
+        databases {
+            create("Database") {
+                packageName.set("ir.khanbeiki.sqldelight.sample.data")
+            }
+        }
+    }
     sourceSets {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
-            implementation(libs.ktor.client.okhttp)
+            implementation(libs.android.driver)
         }
         iosMain.dependencies {
-            implementation("io.ktor:ktor-client-darwin:3.1.3")
+            implementation(libs.native.driver)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -82,27 +89,21 @@ kotlin {
             implementation(libs.navigation.compose)
             implementation(libs.material.icons.core)
 
-            implementation(libs.ktor.client.core)
-            implementation(libs.ktor.client.content.negotiation)
-            implementation(libs.ktor.serialization.kotlinx.json)
-
-            implementation(libs.coil.compose)
-            implementation(libs.coil.network.ktor)
             implementation(libs.koin.core)
             implementation(libs.koin.compose.viewmodel)
 
-            implementation("cafe.adriel.voyager:voyager-navigator:1.1.0-beta03")
-            implementation("cafe.adriel.voyager:voyager-koin:1.1.0-beta03")
-            implementation("cafe.adriel.voyager:voyager-transitions:1.1.0-beta03")
-
+            implementation(libs.voyager.navigator)
+            implementation(libs.voyager.koin)
+            implementation(libs.voyager.transitions)
+            implementation(libs.runtime)
         }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
-            implementation("io.ktor:ktor-client-cio:3.1.3")
+            implementation(libs.sqlite.driver)
         }
         wasmJsMain.dependencies {
-            implementation("io.ktor:ktor-client-js:3.1.3")
+            implementation(libs.web.worker.driver)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -112,12 +113,12 @@ kotlin {
 
 android {
     namespace = "ir.khanbeiki"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "ir.khanbeiki"
-        minSdk = libs.versions.android.minSdk.get().toInt()
-        targetSdk = libs.versions.android.targetSdk.get().toInt()
+        minSdk = 24
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
     }
